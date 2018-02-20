@@ -95,12 +95,12 @@ reward_sum = 0
 running_reward = None
 prev_x = None
 env = gym.make('Pong-v0')
-print(D)
 tf.reset_default_graph()
 agent = policy(200, D)
 init = tf.global_variables_initializer()
 episode_number = 0
 xs, ys, dlogps, rs = [], [], [], []
+saver = tf.train.Saver()
 
 with tf.Session() as sess:
     sess.run(init)
@@ -172,6 +172,7 @@ with tf.Session() as sess:
             print('resetting env. episode reward total was %f. running mean: %f' % (reward_sum, running_reward))
 
             if episode_number % 100 == 0: pickle.dump(agent.writeWeights(), open('nn_p_save.p', 'wb'))
+            saver.save(sess, 'models/pong_model_1.ckpt')
             reward_sum = 0
             observation = env.reset()  # reset env
             prev_x = None
