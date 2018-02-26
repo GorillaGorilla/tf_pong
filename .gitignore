@@ -1,3 +1,4 @@
 .idea/
 models/
 __pycache__
+nn_p_save.p
