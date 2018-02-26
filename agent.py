@@ -54,6 +54,6 @@ class policy:
         return tfprob
 
     def writeWeights(self):
-        weights = self.sess.run(agent.tvars)
+        weights = self.sess.run(self.tvars)
         print(weights)
         return str(weights)

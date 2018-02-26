@@ -109,8 +109,7 @@ with tf.Session() as sess:
 
         action = 2 if np.random.uniform() < probability else 3  # fake label, what does this mean???
         y = 1 if action == 2 else 0
-
-        dlogps.append(y - probability)  # this is a regularisation gradient that pushes slighty for the thing that happened to happen if it was likely, and strongly for it to happen again if it was unlikely
+  # this is a regularisation gradient that pushes slighty for the thing that happened to happen if it was likely, and strongly for it to happen again if it was unlikely
         observation, reward, done, info = env.step(action)
         reward_sum += reward
         rs.append(reward)
@@ -127,14 +126,12 @@ with tf.Session() as sess:
             x_n = np.vstack(xs)
             y_n = np.vstack(ys)
             rs_n = np.vstack(rs)
-            dlogps_n = np.vstack(dlogps)
             print(reward)
 
             if reward != -1:
                 xpos_n = np.vstack(xs)
                 ypos_n = np.vstack(ys)
                 rposs_n = np.vstack(rs)
-                dlogpposs_n = np.vstack(dlogps)
 
 
             xs, ys, dlogps, rs = [], [], [], []  # reset array memory for next point (in the game of pong)
@@ -148,7 +145,7 @@ with tf.Session() as sess:
             #     print('discounted_epr')
             #     print(discounted_epr)
 
-            grads = discounted_epr * dlogps_n
+            grads = discounted_epr
             # calculate the relevant gradients for the policy network
             tGrad = agent.calculatePolicyGradients(x_n, y_n, grads)
 
@@ -166,10 +163,10 @@ with tf.Session() as sess:
             running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01
             print('resetting env. episode reward total was %f. running mean: %f' % (reward_sum, running_reward))
 
-            if reward_sum != -21:
-                point = {'x': x_n, 'y': y_n, 'r': rs_n, 'dlogps': dlogps_n}
-                running = False
-                pickle.dump(point, open('winning_point.p', 'wb'))
+            # if reward_sum != -21:
+            #     point = {'x': x_n, 'y': y_n, 'r': rs_n}
+            #     # running = False
+            #     pickle.dump(point, open('winning_point.p', 'wb'))
 
             if episode_number % 100 == 0:
                 model = {'W1': agent.getW1(), 'W2': agent.getW2()}

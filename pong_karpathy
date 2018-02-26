@@ -106,7 +106,7 @@ while True:
     y = 1 if action == 2 else 0  # a "fake label"
     dlogps.append(y - aprob)  # grad that encourages the action that was taken to be taken (see http://cs231n.github.io/neural-networks-2/#losses if confused)
     # aprob = 0.9 and random is 0.91 then y will be 0 because it went against likelihood. therefore dlogps is -0.91 (if backpropped would make this nlikely outcome more likely in future). if random is 0.1 then y is 1 and dlogps is 0.09. Is this regularisation?? fm
-
+    # i guess this is part of the cross entropy with logits function that tensorflow does...
     # step the environment and get new measurements
     observation, reward, done, info = env.step(action)
     reward_sum += reward
