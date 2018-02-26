@@ -10,7 +10,7 @@ learning_rate = 1e-3
 gamma = 0.99  # discount factor for reward
 D = 80*80
 resume = True
-
+render = True
 # np.set_printoptions(threshold='nan')
 
 
@@ -92,6 +92,7 @@ with tf.Session() as sess:
 
 
     while running:
+        if render: env.render()
         # keep running episodes
         cur_x = prepro(observation, count)
         x = cur_x - prev_x if prev_x is not None else np.zeros(D)
