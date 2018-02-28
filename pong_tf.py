@@ -66,13 +66,24 @@ xs, ys, dlogps, rs = [], [], [], []
 saver = tf.train.Saver()
 count = 0
 running = True
+save_location = 'models/pong_model_softmax.ckpt'
 
+def actionsFromSoftmax(probs):
+    return np.random.choice([1,2,3], probs)
 
+    # random_num = np.random.uniform()
+    # for i, prob in enumerate(probs):
+    #     chosenValue = 2
+    #     chosen = 0
+    #     if (prob < random_num & prob < chosenValue):
+    #         chosen = prob
+    #         chosen = i
+    # return chosen
 
 with tf.Session() as sess:
     if resume:
         print('resuming')
-        saver.restore(sess, './models/pong_model_3_lr3.ckpt')
+        saver.restore(sess, save_location)
     else:
         sess.run(tf.global_variables_initializer())
 
@@ -97,10 +108,11 @@ with tf.Session() as sess:
 
         x = np.reshape(x, [1, D])
         xs.append(x)
-        probability = agent.evaluatePolicy(x)
+        probs = agent.evaluatePolicy(x)
+        action = actionsFromSoftmax(probs)
+        y = [0,0,0]
+        y[action - 1] = 1
 
-        action = 2 if np.random.uniform() < probability else 3  # fake label, what does this mean???
-        y = 1 if action == 2 else 0
   # this is a regularisation gradient that pushes slighty for the thing that happened to happen if it was likely, and strongly for it to happen again if it was unlikely
         observation, reward, done, info = env.step(action)
         reward_sum += reward
@@ -162,8 +174,8 @@ with tf.Session() as sess:
 
             if episode_number % 100 == 0:
                 model = {'W1': agent.getW1(), 'W2': agent.getW2()}
-                pickle.dump(agent.writeWeights(), open('nn_p_save.p', 'wb'))
-                saver.save(sess, 'models/pong_model_3_lr3.ckpt')
+                # pickle.dump(agent.writeWeights(), open('nn_p_save.p', 'wb'))
+                saver.save(sess, save_location)
 
             reward_sum = 0
             observation = env.reset()  # reset env

@@ -9,9 +9,9 @@ class policy:
         self.observations = tf.placeholder(tf.float32, [None, D], name="frame_x")
         self.W1 = tf.get_variable("W1", shape=[D, H], initializer=tf.contrib.layers.xavier_initializer())
         layer1 = tf.nn.relu(tf.matmul(self.observations, self.W1))
-        self.W2 = tf.get_variable("W2", shape=[H, 1], initializer=tf.contrib.layers.xavier_initializer())
+        self.W2 = tf.get_variable("W2", shape=[H, 3], initializer=tf.contrib.layers.xavier_initializer())
         logits = tf.matmul(layer1, self.W2)
-        self.probability = tf.nn.sigmoid(logits)
+        self.probability = tf.nn.softmax(logits)
 
 
 
@@ -19,14 +19,14 @@ class policy:
 
         # training stuff
         self.tvars = tf.trainable_variables()
-        self.input_y = tf.placeholder(tf.float32, [None, 1], name="input_y")
+        self.input_y = tf.placeholder(tf.float32, [None, 3], name="input_y")
         self.advantages = tf.placeholder(tf.float32, name="reward_signal")
         optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
 
         self.W1Grad = tf.placeholder(tf.float32, name="batch_grad1")
         self.W2Grad = tf.placeholder(tf.float32, name="batch_grad2")
         batchGrad = [self.W1Grad, self.W2Grad]
-        cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.input_y,logits=logits)
+        cross_ent = tf.nn.softmax_cross_entropy_with_logits(labels=self.input_y,logits=logits)
         loss = tf.reduce_mean(tf.multiply(self.advantages,cross_ent))
         # loglik = tf.log(self.input_y * (self.input_y - self.probability) + (1 - self.input_y) * (self.input_y + self.probability))
         # loss = -tf.reduce_mean(loglik * self.advantages)
