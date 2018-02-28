@@ -1,17 +1,17 @@
 
 import tensorflow as tf
 import numpy as np
-import  agent
+import  conv_agent as agent
 import cloudpickle as pickle
 import gym
 import matplotlib.pyplot as plt
 
-learning_rate = 1e-3
+learning_rate = 1e-4
 gamma = 0.99  # discount factor for reward
 D = 80
 resume = False
 save_url = './models/pong_model_4_lr3.ckpt'
-
+render = False
 # np.set_printoptions(threshold='nan')
 
 
@@ -81,7 +81,7 @@ running = True
 with tf.Session() as sess:
     if resume:
         print('resuming')
-        saver.restore(sess, './models/pong_model_3_lr3.ckpt')
+        saver.restore(sess, save_url)
     else:
         sess.run(tf.global_variables_initializer())
 
@@ -92,6 +92,7 @@ with tf.Session() as sess:
 
 
     while running:
+        if render: env.render()
         # keep running episodes
         cur_x = prepro(observation, count)
         x = cur_x - prev_x if prev_x is not None else np.zeros((D,D))
@@ -104,10 +105,17 @@ with tf.Session() as sess:
         #     plt.show()
 
         x = np.reshape(x, [1, D, D, 1])
-
-
+        # weights = agent.writeWeights()
+        # print(weights[0].shape)
+        # print(weights[1].shape)
+        # print(weights[2].shape)
+        # print(weights[3].shape)
         xs.append(x)
-        probability = agent.evaluatePolicy(x)
+        # probability = agent.evaluatePolicy(x)
+        probability, logitProb, W2 = agent.evalPolWithIntermediates(x)
+
+        # print('probability %f  logit %f' % (tfprob, logitProb))
+        # print(W2)
         action = 2 if np.random.uniform() < probability else 3  # fake label, what does this mean???
         y = 1 if action == 2 else 0
   # this is a regularisation gradient that pushes slighty for the thing that happened to happen if it was likely, and strongly for it to happen again if it was unlikely
@@ -127,7 +135,6 @@ with tf.Session() as sess:
             x_n = np.vstack(xs)
             y_n = np.vstack(ys)
             rs_n = np.vstack(rs)
-            print(reward)
 
             if reward != -1:
                 xpos_n = np.vstack(xs)
@@ -149,15 +156,30 @@ with tf.Session() as sess:
             grads = discounted_epr
             # calculate the relevant gradients for the policy network
             tGrad = agent.calculatePolicyGradients(x_n, y_n, grads)
-
+            # print('grads')
+            # print(tGrad[0].shape)
+            # print(tGrad[1].shape)
+            # print(tGrad[2].shape)
+            # print(tGrad[3].shape)
             if np.sum(tGrad[0] == tGrad[0]) == 0:
                 break
             # aggregate the gradients into the buffer (can just sum them as 2 variables, savesa  dimension)
+
+
             for ix, grad in enumerate(tGrad):
                 gradBuffer[ix] += grad
             # then train the policy network in a batch!
-            if episode_number % 20 == 0:
-                agent.trainPolicyNetwork(gradBuffer[0], gradBuffer[1])
+
+            if episode_number % 10 == 0:
+                print('probability %f  logit %f' % (probability, logitProb))
+                print(W2)
+                print(gradBuffer[0].shape)
+                print(gradBuffer[1].shape)
+                print(gradBuffer[2].shape)
+                print(gradBuffer[3].shape)
+                print(gradBuffer[4].shape)
+                print(gradBuffer[5].shape)
+                agent.trainPolicyNetwork(gradBuffer[0], gradBuffer[1], gradBuffer[2], gradBuffer[3], gradBuffer[4], gradBuffer[5])
                 resetGradBuffer(gradBuffer)
 
             # boring book-keeping
