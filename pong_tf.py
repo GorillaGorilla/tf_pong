@@ -6,10 +6,10 @@ import cloudpickle as pickle
 import gym
 import matplotlib.pyplot as plt
 
-learning_rate = 1e-3
+learning_rate = 1e-4
 gamma = 0.99  # discount factor for reward
 D = 80*80
-resume = True
+resume = False
 render = False
 # np.set_printoptions(threshold='nan')
 
@@ -69,7 +69,8 @@ running = True
 save_location = 'models/pong_model_softmax.ckpt'
 
 def actionsFromSoftmax(probs):
-    return np.random.choice([1,2,3], probs)
+    # print(probs)
+    return np.random.choice([1,2,3],1, p=probs)
 
     # random_num = np.random.uniform()
     # for i, prob in enumerate(probs):
@@ -108,10 +109,12 @@ with tf.Session() as sess:
 
         x = np.reshape(x, [1, D])
         xs.append(x)
-        probs = agent.evaluatePolicy(x)
-        action = actionsFromSoftmax(probs)
+        probs, logitProb, W2 = agent.evalPolWithIntermediates(x)
+        action = actionsFromSoftmax(probs[0])
+
         y = [0,0,0]
         y[action - 1] = 1
+
 
   # this is a regularisation gradient that pushes slighty for the thing that happened to happen if it was likely, and strongly for it to happen again if it was unlikely
         observation, reward, done, info = env.step(action)
@@ -130,8 +133,11 @@ with tf.Session() as sess:
             x_n = np.vstack(xs)
             y_n = np.vstack(ys)
             rs_n = np.vstack(rs)
-            print(reward)
 
+            print(reward)
+            print('logitProb',logitProb)
+            print('probs', probs)
+            print('y', y)
             if reward != -1:
                 xpos_n = np.vstack(xs)
                 ypos_n = np.vstack(ys)
@@ -151,6 +157,7 @@ with tf.Session() as sess:
 
             grads = discounted_epr
             # calculate the relevant gradients for the policy network
+            print(y_n)
             tGrad = agent.calculatePolicyGradients(x_n, y_n, grads)
 
             if np.sum(tGrad[0] == tGrad[0]) == 0:
@@ -159,7 +166,7 @@ with tf.Session() as sess:
             for ix, grad in enumerate(tGrad):
                 gradBuffer[ix] += grad
             # then train the policy network in a batch!
-            if episode_number % 20 == 0:
+            if episode_number % 10 == 0:
                 agent.trainPolicyNetwork(gradBuffer[0], gradBuffer[1])
                 resetGradBuffer(gradBuffer)
 
