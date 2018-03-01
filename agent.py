@@ -60,4 +60,4 @@ class policy:
     def writeWeights(self):
         weights = self.sess.run(self.tvars)
         print(weights)
-        return str(weights)
+        return weights

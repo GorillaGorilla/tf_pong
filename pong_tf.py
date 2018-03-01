@@ -6,10 +6,10 @@ import cloudpickle as pickle
 import gym
 import matplotlib.pyplot as plt
 
-learning_rate = 1e-4
+learning_rate = 1e-2
 gamma = 0.99  # discount factor for reward
 D = 80*80
-resume = False
+resume = True
 render = False
 # np.set_printoptions(threshold='nan')
 
@@ -111,7 +111,6 @@ with tf.Session() as sess:
         xs.append(x)
         probs, logitProb, W2 = agent.evalPolWithIntermediates(x)
         action = actionsFromSoftmax(probs[0])
-
         y = [0,0,0]
         y[action - 1] = 1
 
@@ -134,8 +133,9 @@ with tf.Session() as sess:
             y_n = np.vstack(ys)
             rs_n = np.vstack(rs)
 
-            print(reward)
+
             print('logitProb',logitProb)
+            print('log logitProb', tf.log(logitProb))
             print('probs', probs)
             print('y', y)
             if reward != -1:
@@ -159,16 +159,48 @@ with tf.Session() as sess:
             # calculate the relevant gradients for the policy network
             print(y_n)
             tGrad = agent.calculatePolicyGradients(x_n, y_n, grads)
-
+            print('tGrad[0]',tGrad[0].shape)
             if np.sum(tGrad[0] == tGrad[0]) == 0:
                 break
             # aggregate the gradients into the buffer (can just sum them as 2 variables, savesa  dimension)
             for ix, grad in enumerate(tGrad):
                 gradBuffer[ix] += grad
             # then train the policy network in a batch!
-            if episode_number % 10 == 0:
+            if episode_number % 20 == 0:
+                # weights1 = agent.writeWeights()
+                # first1 = weights1[0][:, 0]
+                # firstImg1 = first1.reshape([80, 80])
+                #
+                # print('grad1',gradBuffer[0][:,0])
+                #
+                # plt.subplot(211)
+                # plt.imshow(gradBuffer[0][:, 0].reshape(80, 80),cmap='gray')
+                # plt.subplot(212)
+                # plt.imshow(gradBuffer[0][:, 1].reshape(80, 80),cmap='gray')
+                # plt.show()
+                # input("Press Enter to continue...")
+
+
                 agent.trainPolicyNetwork(gradBuffer[0], gradBuffer[1])
                 resetGradBuffer(gradBuffer)
+
+
+                # weights2 = agent.writeWeights()
+                # first2 = weights2[0][:, 0]
+                # firstImg2 = first2.reshape([80, 80])
+                # img_diff = firstImg2 - firstImg1
+                # print(img_diff)
+                # plt.figure(1)
+                # plt.imshow(firstImg1,cmap='gray')
+                # plt.figure(2)
+                # plt.imshow(firstImg2,cmap='gray')
+                # plt.figure(3)
+                # plt.imshow(img_diff,cmap='gray')
+                # plt.show()
+                # input("Press Enter to continue...")
+                # print(firstImg2.shape)
+
+
 
             # boring book-keeping
             running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01
