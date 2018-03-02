@@ -6,10 +6,10 @@ import cloudpickle as pickle
 import gym
 import matplotlib.pyplot as plt
 
-learning_rate = 1e-2
+learning_rate = 1e-1
 gamma = 0.99  # discount factor for reward
 D = 80*80
-resume = True
+resume = False
 render = False
 # np.set_printoptions(threshold='nan')
 
@@ -166,12 +166,14 @@ with tf.Session() as sess:
             for ix, grad in enumerate(tGrad):
                 gradBuffer[ix] += grad
             # then train the policy network in a batch!
-            if episode_number % 20 == 0:
+            if episode_number % 10 == 0:
                 # weights1 = agent.writeWeights()
                 # first1 = weights1[0][:, 0]
                 # firstImg1 = first1.reshape([80, 80])
-                #
-                # print('grad1',gradBuffer[0][:,0])
+                # print('grad1', gradBuffer[0][:, 0])
+                # print('weights[2].shape', weights1[1].shape)
+                # print('weights1[1]',weights1[1])
+                # print('grad2', gradBuffer[1])
                 #
                 # plt.subplot(211)
                 # plt.imshow(gradBuffer[0][:, 0].reshape(80, 80),cmap='gray')
@@ -185,7 +187,7 @@ with tf.Session() as sess:
                 resetGradBuffer(gradBuffer)
 
 
-                # weights2 = agent.writeWeights()
+                weights2 = agent.writeWeights()
                 # first2 = weights2[0][:, 0]
                 # firstImg2 = first2.reshape([80, 80])
                 # img_diff = firstImg2 - firstImg1
@@ -199,8 +201,9 @@ with tf.Session() as sess:
                 # plt.show()
                 # input("Press Enter to continue...")
                 # print(firstImg2.shape)
-
-
+                # print('weights2[2].shape', weights2[1].shape)
+                # print('weights2[1]', weights2[1])
+                # print('grad22', gradBuffer[1])
 
             # boring book-keeping
             running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01
