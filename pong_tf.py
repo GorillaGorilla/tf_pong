@@ -114,8 +114,6 @@ with tf.Session() as sess:
         y = [0,0,0]
         y[action - 1] = 1
 
-
-  # this is a regularisation gradient that pushes slighty for the thing that happened to happen if it was likely, and strongly for it to happen again if it was unlikely
         observation, reward, done, info = env.step(action)
         reward_sum += reward
         rs.append(reward)
